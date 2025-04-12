@@ -1,0 +1,3 @@
+C:/Users/vinee/OneDrive/Desktop/git-c/cmake-build-debug/CMakeFiles/git_c.dir
+C:/Users/vinee/OneDrive/Desktop/git-c/cmake-build-debug/CMakeFiles/edit_cache.dir
+C:/Users/vinee/OneDrive/Desktop/git-c/cmake-build-debug/CMakeFiles/rebuild_cache.dir
