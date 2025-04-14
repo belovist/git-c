@@ -149,5 +149,5 @@ void create_readme() {
     fprintf(f, "\nwith love from \n");
     fprintf(f, "\nTANUSHREE KURALKAR- 24070122217\nVINEET KUMAR – 24070122234\nYASH SAMTANI – 24070122237\nYASHASVI AGARWAL - 24070122238 \n");
     fclose(f);
-    printf("📄 README.txt created successfully!\n");
+    printf(" README.txt created successfully!\n");
 }
