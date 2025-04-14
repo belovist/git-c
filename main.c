@@ -1,42 +1,43 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+
 #include <time.h>
+
 #include <direct.h>
 #define mkdir _mkdir
 
-// Function declarations
 void init();
-void commit(const char *filename);
+void commit(const char *name);
 void status();
-void delete_last_commit();
-void log_commits();
+void deletelastcommit();
+void log();
 void create_readme();
 
-int main(int argc, char *argv[]) {
-    if (argc < 2) {
+int main(int i, char *ch[]) {
+    if (i < 2) {
         printf("Please provide a command like: init, commit <file>, status, delete, log, readme\n");
         return 1;
     }
 
-    if (strcmp(argv[1], "init") == 0) {
+    if (strcmp(ch[1], "init") == 0) {
         init();
-    } else if (strcmp(argv[1], "commit") == 0) {
-        if (argc < 3) {
+    } else if (strcmp(ch[1], "commit") == 0) {
+        if (i < 3) {
             printf(" Please provide a file to commit. Usage: commit myfile.txt\n");
             return 1;
         }
-        commit(argv[2]);
-    } else if (strcmp(argv[1], "status") == 0) {
+        commit(ch[2]);
+    } else if (strcmp(ch[1], "status") == 0) {
         status();
-    } else if (strcmp(argv[1], "delete") == 0) {
-        delete_last_commit();
-    } else if (strcmp(argv[1], "log") == 0) {
-        log_commits();
-    } else if (strcmp(argv[1], "readme") == 0) {
+    } else if (strcmp(ch[1], "delete") == 0) {
+        deletelastcommit();
+    } else if (strcmp(ch[1], "log") == 0) {
+        log();
+    } else if (strcmp(ch[1], "readme") == 0) {
         create_readme();
     } else {
-        printf("Unknown command: %s\n", argv[1]);
+        printf("Unknown command: %s\n", ch[1]);
     }
 
     return 0;
@@ -44,10 +45,10 @@ int main(int argc, char *argv[]) {
 
 // Initializes the repo
 void init() {
-    int res1 = mkdir(".mygit");
-    int res2 = mkdir(".mygit\\commits");
+    int f1 = mkdir(".mygit");
+    int f2 = mkdir(".mygit\\commits");
 
-    if (res1 == 0 || res2 == 0) {
+    if (f1 == 0 || f2 == 0) {
         printf(" Repo initialized in .mygit\n");
     } else {
         printf(" Repo might already exist!\n");
@@ -55,44 +56,60 @@ void init() {
 }
 
 // Commit the specified file
-void commit(const char *filename) {
-    // Check if file exists first
-    FILE *file = fopen(filename, "r");
+void commit(const char *name) {
+
+    FILE *file = fopen(name, "r");
     if (!file) {
-        printf(" File '%s' not found!\n", filename);
+        printf(" File '%s' not found!\n", name);
         return;
     }
     fclose(file);
 
     time_t now = time(NULL);
+
     struct tm *t = localtime(&now);
+
     char foldername[100];
 
-    strftime(foldername, sizeof(foldername), ".mygit\\commits\\commit_%Y%m%d_%H%M%S", t);
-    _mkdir(foldername); // Create the commit folder
+    char datepart[20];
+    char timepart[20];
 
-    // Build copy command
-    char command[200];
-    snprintf(command, sizeof(command), "copy %s %s > nul", filename, foldername);
-    int result = system(command);
+    strftime(datepart, sizeof(datepart), "%Y%m%d", t);
+    strftime(timepart, sizeof(timepart), "%H%M%S", t);
 
-    if (result == 0) {
-        printf(" Committed '%s' to %s\n", filename, foldername);
+    strcpy(foldername, ".mygit\\commits\\commit_");
+    strcat(foldername, datepart);
+    strcat(foldername, "_");
+    strcat(foldername, timepart);
+
+    _mkdir(foldername);
+
+    char cmd[200];
+    strcpy(cmd, "copy ");
+    strcat(cmd, name);
+    strcat(cmd, " ");
+    strcat(cmd, foldername);
+
+    int r = system(cmd);
+
+    if (r == 0) {
+        printf(" Committed '%s' to %s\n", name, foldername);
     } else {
         printf(" Failed to copy the file.\n");
     }
+
 }
 
-// Shows dummy status
+// doesnt do anything
 void status() {
-    printf(" Status: All files are fine (probably )\n");
+    printf(" Status: All files are fine (probably)\n");
 }
 
 // Delete the latest commit folder
-void delete_last_commit() {
+void deletelastcommit() {
     FILE *fp;
-    char command[512];
-    char latest_commit[256] = "";
+    char cmd[512];
+    char commit[256] = "";
 
     fp = _popen("dir /B /O-D .mygit\\commits", "r");
 
@@ -101,28 +118,31 @@ void delete_last_commit() {
         return;
     }
 
-    if (fgets(latest_commit, sizeof(latest_commit), fp) == NULL) {
+    if (fgets(commit, sizeof(commit), fp) == NULL) {
         printf("No commits to delete.\n");
         _pclose(fp);
         return;
     }
 
-    latest_commit[strcspn(latest_commit, "\n")] = '\0'; // Remove newline
+    size_t newline_index = strcspn(commit, "\n");
+    commit[newline_index] = '\0';
+
     _pclose(fp);
 
-    snprintf(command, sizeof(command), "rmdir /S /Q .mygit\\commits\\%s", latest_commit);
+    strcpy(cmd, "rmdir /S .mygit\\commits\\");
+    strcat(cmd, commit);
 
-    int result = system(command);
+    int r = system(cmd);
 
-    if (result == 0) {
-        printf(" Deleted last commit: %s\n", latest_commit);
+    if (r == 0) {
+        printf(" Deleted last commit: %s\n", commit);
     } else {
         printf(" Failed to delete commit.\n");
     }
+
 }
 
-// List commits in reverse order
-void log_commits() {
+void log() {
     printf(" Commit Log:\n");
     system("dir /B /O-D .mygit\\commits");
 }
@@ -147,7 +167,7 @@ void create_readme() {
     fprintf(f, "6. readme         - Generate this help file\n");
     fprintf(f, "\nbye bye!! \n");
     fprintf(f, "\nwith love from \n");
-    fprintf(f, "\nTANUSHREE KURALKAR- 24070122217\nVINEET KUMAR – 24070122234\nYASH SAMTANI – 24070122237\nYASHASVI AGARWAL - 24070122238 \n");
+    fprintf(f, "\nTANUSHREE KURALKAR- 24070122217\nVINEET KUMAR – 24070122234\nYASH SAMTANI – 24070122237\nYASHASVI AGARWAL-24070122238 \n");
     fclose(f);
     printf(" README.txt created successfully!\n");
 }
